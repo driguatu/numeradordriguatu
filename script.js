@@ -1,6 +1,4 @@
-// Certifique-se de que os scripts do Firebase estão carregados antes deste código
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
-import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
+
 
 
 // Firebase Configuração
@@ -15,15 +13,15 @@ const firebaseConfig = {
 };
 
 
-// Inicialização do Firebase
-const app = initializeApp(firebaseConfig);
-const database = getDatabase(app);
-const countRef = ref(database, 'contador');
+// Inicializar Firebase
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+const countRef = database.ref('contador');
 let count = 0;
 
 // Carregar contagem
 function loadCount() {
-    onValue(countRef, (snapshot) => {
+    countRef.on('value', (snapshot) => {
         count = snapshot.val() || 0;
         document.getElementById('count').innerText = count;
     });
@@ -31,7 +29,7 @@ function loadCount() {
 
 // Salvar contagem
 function saveCount() {
-    set(countRef, count);
+    countRef.set(count);
 }
 
 function increment() {
