@@ -1,42 +1,41 @@
-const apiKey = '$2a$10$I.nAGVatRjpKKbw/ugGoNe3V3Is9QWViWkM20djPjZfo6Jo/GfNqO';
-const binId = '6797b2abe41b4d34e47f8a51';
+// Firebase Configuração
+const firebaseConfig = {
+  apiKey: "AIzaSyBvO-DbZSOcOB-2EWpjreQ21K6BcKXPOFI",
+  authDomain: "bancodedados-1885b.firebaseapp.com",
+  databaseURL: "https://bancodedados-1885b-default-rtdb.firebaseio.com",
+  projectId: "bancodedados-1885b",
+  storageBucket: "bancodedados-1885b.firebasestorage.app",
+  messagingSenderId: "248100180231",
+  appId: "1:248100180231:web:42aaea7c087199c26f75a2"
+};
 
-async function loadCount() {
-    try {
-        const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
-            headers: {
-                'X-Master-Key': apiKey
-            }
-        });
-        const data = await response.json();
-        count = data.record.count || 0;
+// Inicializar Firebase
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+const countRef = database.ref('contador');
+
+// Carregar a contagem do Firebase
+function loadCount() {
+    countRef.on('value', (snapshot) => {
+        const data = snapshot.val();
+        count = data || 0;
         document.getElementById('count').innerText = count;
-    } catch (error) {
-        console.error('Erro ao carregar a contagem:', error);
-    }
+    });
 }
 
-async function saveCount() {
-    try {
-        await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Master-Key': apiKey
-            },
-            body: JSON.stringify({ count })
-        });
-    } catch (error) {
-        console.error('Erro ao salvar a contagem:', error);
-    }
+// Salvar a contagem no Firebase
+function saveCount() {
+    countRef.set(count);
 }
 
+// Incrementar
 function increment() {
     count++;
     document.getElementById('count').innerText = count;
     saveCount();
 }
 
+// Decrementar
 function decrement() {
     if (confirm("Tem certeza de que deseja diminuir o número?")) {
         count--;
