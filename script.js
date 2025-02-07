@@ -14,33 +14,32 @@ const firebaseConfig = {
   appId: "1:248100180231:web:42aaea7c087199c26f75a2"
 };
 
-// Inicializar Firebase
-firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
-const countRef = database.ref('contador');
 
-// Carregar a contagem do Firebase
+// Inicialização do Firebase
+const app = initializeApp(firebaseConfig);
+const database = getDatabase(app);
+const countRef = ref(database, 'contador');
+
+
+// Carregar contagem
 function loadCount() {
-    countRef.on('value', (snapshot) => {
-        const data = snapshot.val();
-        count = data || 0;
+    onValue(countRef, (snapshot) => {
+        count = snapshot.val() || 0;
         document.getElementById('count').innerText = count;
     });
 }
 
-// Salvar a contagem no Firebase
+// Salvar contagem
 function saveCount() {
-    countRef.set(count);
+    set(countRef, count);
 }
 
-// Incrementar
 function increment() {
     count++;
     document.getElementById('count').innerText = count;
     saveCount();
 }
 
-// Decrementar
 function decrement() {
     if (confirm("Tem certeza de que deseja diminuir o número?")) {
         count--;
