@@ -1,13 +1,12 @@
 require('dotenv').config();
 const express = require('express');
-const mysql = require('mysql2/promise'); // Usamos a versão promise para código mais limpo
+const mysql = require('mysql2/promise');
 const path = require('path');
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Configuração da conexão com o Banco de Dados
-// NOTA: Em produção, é recomendado usar variáveis de ambiente (.env) para isso.
+// Configuração da conexão
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -18,52 +17,92 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
-// Middleware para servir arquivos estáticos e JSON
 app.use(express.static(__dirname));
 app.use(express.json());
 
-// --- Inicialização do Banco de Dados ---
-// Cria a tabela se não existir e insere o valor inicial 0
+// --- Inicialização e Migração do Banco ---
 async function initDB() {
   try {
-    // 1. Cria a tabela
-    const createTableQuery = `
+    // 1. Garante que a tabela existe
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS tabela_contador (
         id INT PRIMARY KEY,
         valor INT DEFAULT 0
       )
-    `;
-    await pool.query(createTableQuery);
+    `);
 
-    // 2. Verifica se já existe um contador
-    const [rows] = await pool.query('SELECT * FROM tabela_contador WHERE id = 1');
-    
-    // 3. Se não existir, cria o registro inicial
-    if (rows.length === 0) {
-      await pool.query('INSERT INTO tabela_contador (id, valor) VALUES (1, 0)');
-      console.log('Contador inicializado com valor 0 no banco de dados.');
-    } else {
-      console.log('Banco de dados conectado. Valor atual: ' + rows[0].valor);
+    // 2. Tenta adicionar as colunas novas (ano e contagem de msg) se não existirem
+    // Usamos um try/catch silencioso para ignorar erro se a coluna já existir
+    try {
+      await pool.query("ALTER TABLE tabela_contador ADD COLUMN ano INT DEFAULT 2024");
+      await pool.query("ALTER TABLE tabela_contador ADD COLUMN acessos_msg INT DEFAULT 5");
+    } catch (e) {
+      // Ignora erro de "Duplicate column name"
     }
+
+    // 3. Garante que existe o registro inicial (ID 1)
+    const [rows] = await pool.query('SELECT * FROM tabela_contador WHERE id = 1');
+    if (rows.length === 0) {
+      const anoAtual = new Date().getFullYear();
+      await pool.query('INSERT INTO tabela_contador (id, valor, ano, acessos_msg) VALUES (1, 0, ?, 5)', [anoAtual]);
+      console.log('Registro inicial criado.');
+    }
+    
+    console.log('Banco de dados pronto.');
   } catch (err) {
-    console.error('Erro ao inicializar banco de dados:', err);
+    console.error('Erro ao inicializar banco:', err);
   }
 }
 
-// Chama a inicialização
 initDB();
 
-// --- Rotas da API ---
+// --- Lógica de Ano Novo ---
+async function verificarAnoNovo() {
+  const anoAtual = new Date().getFullYear();
+  
+  // Busca o ano salvo no banco
+  const [rows] = await pool.query('SELECT ano FROM tabela_contador WHERE id = 1');
+  if (rows.length === 0) return; // Segurança
 
-// Endpoint para obter o valor atual
+  const anoSalvo = rows[0].ano;
+
+  // Se o ano virou (Ano atual é maior que o salvo)
+  if (anoAtual > anoSalvo) {
+    console.log(`Ano Novo detectado! Resetando contador de ${anoSalvo} para ${anoAtual}.`);
+    // Reseta o valor para 0, atualiza o ano e reseta a contagem de mensagens para 0 (para começar a contar os 5 primeiros)
+    await pool.query(`
+      UPDATE tabela_contador 
+      SET valor = 0, ano = ?, acessos_msg = 0 
+      WHERE id = 1
+    `, [anoAtual]);
+  }
+}
+
+// --- Rotas ---
+
 app.get('/api/counter', async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT valor FROM tabela_contador WHERE id = 1');
-    // Retorna no mesmo formato que o frontend espera { counter: X }
+    // Antes de buscar, verifica se é ano novo
+    await verificarAnoNovo();
+
+    // Busca dados
+    const [rows] = await pool.query('SELECT valor, acessos_msg FROM tabela_contador WHERE id = 1');
+    
     if (rows.length > 0) {
-      res.json({ counter: rows[0].valor });
+      let dados = rows[0];
+      let mensagem = null;
+
+      // Lógica da Mensagem de Ano Novo (apenas para os 5 primeiros acessos)
+      // Se acessos_msg for menor que 5, exibimos a mensagem e incrementamos
+      if (dados.acessos_msg < 5) {
+        mensagem = "🎉 Feliz Ano Novo! O contador foi reiniciado. 🎉";
+        // Incrementa o contador de visualização da mensagem
+        await pool.query('UPDATE tabela_contador SET acessos_msg = acessos_msg + 1 WHERE id = 1');
+      }
+
+      res.json({ counter: dados.valor, message: mensagem });
     } else {
-      res.json({ counter: 0 });
+      res.json({ counter: 0, message: null });
     }
   } catch (err) {
     console.error(err);
@@ -71,31 +110,25 @@ app.get('/api/counter', async (req, res) => {
   }
 });
 
-// Endpoint para aumentar
 app.post('/api/counter/increase', async (req, res) => {
   try {
-    // Atualiza o valor
+    await verificarAnoNovo(); // Garante que não aumenta o contador do ano passado
     await pool.query('UPDATE tabela_contador SET valor = valor + 1 WHERE id = 1');
-    
-    // Busca o valor atualizado para retornar
     const [rows] = await pool.query('SELECT valor FROM tabela_contador WHERE id = 1');
     res.json({ counter: rows[0].valor });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Erro ao aumentar contador' });
+    res.status(500).json({ error: 'Erro' });
   }
 });
 
-// Endpoint para diminuir
 app.post('/api/counter/decrease', async (req, res) => {
   try {
+    await verificarAnoNovo();
     await pool.query('UPDATE tabela_contador SET valor = valor - 1 WHERE id = 1');
-    
     const [rows] = await pool.query('SELECT valor FROM tabela_contador WHERE id = 1');
     res.json({ counter: rows[0].valor });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Erro ao diminuir contador' });
+    res.status(500).json({ error: 'Erro' });
   }
 });
 

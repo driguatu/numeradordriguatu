@@ -43,3 +43,24 @@ body {
   font-size: 48px;
   margin: 20px 0 5px 0; /* Margem inferior reduzida para 5px */
 }
+
+.hidden {
+  display: none;
+}
+
+#special-message {
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeeba;
+  padding: 15px;
+  margin-bottom: 15px;
+  border-radius: 5px;
+  font-weight: bold;
+  font-size: 18px;
+  animation: fadeIn 1s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

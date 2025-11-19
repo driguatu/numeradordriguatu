@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const datetimeDisplay = document.getElementById('datetime'); // Novo elemento
   const increaseBtn = document.getElementById('increase');
   const decreaseBtn = document.getElementById('decrease');
+  const messageDisplay = document.getElementById('special-message');
 
   // --- CÓDIGO DO RELÓGIO (ADICIONE ISTO) ---
   function updateClock() {
@@ -27,6 +28,15 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(response => response.json())
       .then(data => {
         counterDisplay.textContent = data.counter;
+        
+        // --- LÓGICA DA MENSAGEM ---
+        if (data.message) {
+          messageDisplay.textContent = data.message;
+          messageDisplay.classList.remove('hidden'); // Mostra a div
+        } else {
+          messageDisplay.classList.add('hidden'); // Esconde se não tiver msg
+        }
+        // -------------------------
       })
       .catch(err => console.error('Erro ao obter contador:', err));
   }
