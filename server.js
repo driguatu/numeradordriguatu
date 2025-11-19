@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const mysql = require('mysql2/promise'); // Usamos a versão promise para código mais limpo
 const path = require('path');
@@ -8,10 +9,10 @@ const port = process.env.PORT || 3000;
 // Configuração da conexão com o Banco de Dados
 // NOTA: Em produção, é recomendado usar variáveis de ambiente (.env) para isso.
 const pool = mysql.createPool({
-  host: 'sao.domcloud.co', 
-  user: 'numeradordeoficios', 
-  password: '85pYcE2x(_8(QXxxI5',
-  database: 'numeradordeoficios_contador',
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  database: process.env.DB_NAME,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
