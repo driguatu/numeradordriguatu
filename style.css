@@ -28,3 +28,18 @@ body {
   margin: 0 10px;
   cursor: pointer;
 }
+
+/* Adicione isso ao final do seu arquivo style.css */
+
+#datetime {
+  font-size: 12px;
+  margin-bottom: 20px; /* Espaço entre a data e os botões */
+  color: #555; /* Uma cor cinza escuro para ficar discreto */
+}
+
+/* Ajuste opcional: Se quiser que o número do contador fique mais perto da data,
+   diminua a margem inferior do #counter */
+#counter {
+  font-size: 48px;
+  margin: 20px 0 5px 0; /* Margem inferior reduzida para 5px */
+}
