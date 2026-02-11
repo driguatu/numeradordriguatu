@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SEINT - Numerador de Documentos</title>
+  <link rel="stylesheet" href="seint-style.css">
+</head>
+<body>
+  <div class="page-container">
+    <div id="special-message" class="hidden"></div>
+    <div id="datetime"></div>
+    <h1>SEINT</h1>
+    <p class="subtitle">Seção de Inteligência</p>
+
+    <div class="cards-grid">
+
+      <div class="container">
+        <h2>Ofícios</h2>
+        <div class="counter" id="counter-oficios">0</div>
+        <div class="buttons">
+          <button class="btn-decrease" data-tipo="oficios">-</button>
+          <button class="btn-increase" data-tipo="oficios">+</button>
+        </div>
+      </div>
+
+      <div class="container">
+        <h2>Relatório de Inteligência</h2>
+        <div class="counter" id="counter-relatorio_inteligencia">0</div>
+        <div class="buttons">
+          <button class="btn-decrease" data-tipo="relatorio_inteligencia">-</button>
+          <button class="btn-increase" data-tipo="relatorio_inteligencia">+</button>
+        </div>
+      </div>
+
+      <div class="container">
+        <h2>Relatório Técnico</h2>
+        <div class="counter" id="counter-relatorio_tecnico">0</div>
+        <div class="buttons">
+          <button class="btn-decrease" data-tipo="relatorio_tecnico">-</button>
+          <button class="btn-increase" data-tipo="relatorio_tecnico">+</button>
+        </div>
+      </div>
+
+      <div class="container">
+        <h2>Relatório Interno</h2>
+        <div class="counter" id="counter-relatorio_interno">0</div>
+        <div class="buttons">
+          <button class="btn-decrease" data-tipo="relatorio_interno">-</button>
+          <button class="btn-increase" data-tipo="relatorio_interno">+</button>
+        </div>
+      </div>
+
+    </div>
+
+    <a href="/" class="back-link">← Voltar ao Numerador Principal</a>
+  </div>
+
+  <script src="seint-script.js"></script>
+</body>
+</html>
